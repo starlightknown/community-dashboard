@@ -11,16 +11,21 @@ const GUILD_ID = "1236805163784736850";
 
 async function fetchGuildData() {
   try {
-    const response = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}`, {
-      headers: {
-        Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
-      },
-    });
+    const response = await fetch(
+      `https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+        },
+      }
+    );
     if (!response.ok) {
       console.error("Failed to fetch guild:", response.status);
       return null;
     }
-    return await response.json();
+    const data = await response.json();
+    console.log("Guild data:", data);
+    return data;
   } catch (error) {
     console.error("Error fetching guild:", error);
     return null;

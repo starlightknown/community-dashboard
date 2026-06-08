@@ -7,6 +7,8 @@ interface Guild {
   name: string;
   icon: string;
   member_count?: number;
+  approximate_member_count?: number;
+  approximate_presence_count?: number;
   owner_id?: string;
   created_at?: string;
 }
@@ -16,7 +18,7 @@ export default function Hero({ guild }: { guild: Guild | null }) {
   const metrics = [
     {
       label: "Active Members",
-      value: guild?.member_count ? `${(guild.member_count * 0.3).toLocaleString()} online` : "Loading...",
+      value: guild?.approximate_presence_count ? `${guild.approximate_presence_count.toLocaleString()} online` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-emerald-400"
@@ -36,7 +38,7 @@ export default function Hero({ guild }: { guild: Guild | null }) {
     },
     {
       label: "Server Total",
-      value: guild?.member_count ? `${guild.member_count.toLocaleString()} members` : "Loading...",
+      value: guild?.approximate_member_count ? `${guild.approximate_member_count.toLocaleString()} members` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-violet-400"
@@ -55,7 +57,7 @@ export default function Hero({ guild }: { guild: Guild | null }) {
     },
     {
       label: "Messages Tracked",
-      value: guild?.member_count ? `${Math.floor(guild.member_count * 15).toLocaleString()} logs` : "Loading...",
+      value: guild?.approximate_member_count ? `${Math.floor(guild.approximate_member_count * 15).toLocaleString()} logs` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-indigo-400"
