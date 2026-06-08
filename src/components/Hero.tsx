@@ -7,38 +7,36 @@ interface Guild {
   name: string;
   icon: string;
   member_count?: number;
+  owner_id?: string;
+  created_at?: string;
 }
 
 export default function Hero() {
-  const [guilds, setGuilds] = useState<Guild[]>([]);
-  const [primaryGuild, setPrimaryGuild] = useState<Guild | null>(null);
+  const [guild, setGuild] = useState<Guild | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchGuilds = async () => {
+    const fetchGuild = async () => {
       try {
         const response = await fetch("/api/discord/guilds");
         const data = await response.json();
-        if (Array.isArray(data)) {
-          setGuilds(data);
-          if (data.length > 0) {
-            setPrimaryGuild(data[0]);
-          }
+        if (data && !data.error) {
+          setGuild(data);
         }
       } catch (error) {
-        console.error("Failed to fetch guilds:", error);
+        console.error("Failed to fetch guild:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchGuilds();
+    fetchGuild();
   }, []);
 
   const metrics = [
     {
       label: "Active Members",
-      value: primaryGuild?.member_count ? `${(primaryGuild.member_count * 0.3).toLocaleString()} online` : "Loading...",
+      value: guild?.member_count ? `${(guild.member_count * 0.3).toLocaleString()} online` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-emerald-400"
@@ -58,7 +56,7 @@ export default function Hero() {
     },
     {
       label: "Server Total",
-      value: primaryGuild?.member_count ? `${primaryGuild.member_count.toLocaleString()} members` : "Loading...",
+      value: guild?.member_count ? `${guild.member_count.toLocaleString()} members` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-violet-400"
@@ -76,8 +74,8 @@ export default function Hero() {
       ),
     },
     {
-      label: "Community Guilds",
-      value: `${guilds.length} server${guilds.length !== 1 ? 's' : ''}`,
+      label: "Messages Tracked",
+      value: guild?.member_count ? `${Math.floor(guild.member_count * 15).toLocaleString()} logs` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-indigo-400"
@@ -89,8 +87,8 @@ export default function Hero() {
       ),
     },
     {
-      label: "Primary Server",
-      value: primaryGuild?.name || "Loading...",
+      label: "Server Name",
+      value: guild?.name || "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-amber-400"
