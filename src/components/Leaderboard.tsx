@@ -10,6 +10,8 @@ interface LeaderboardUser {
   gain: string;
   avatarGradient: string;
   initials: string;
+  isDiscordLinked?: boolean;
+  progress: number;
 }
 
 export default function Leaderboard() {
@@ -22,6 +24,8 @@ export default function Leaderboard() {
       gain: "+340 this week",
       avatarGradient: "from-amber-400 to-yellow-500",
       initials: "AL",
+      isDiscordLinked: true,
+      progress: 92,
     },
     {
       rank: 2,
@@ -31,6 +35,8 @@ export default function Leaderboard() {
       gain: "+240 this week",
       avatarGradient: "from-slate-300 to-slate-400",
       initials: "LT",
+      isDiscordLinked: true,
+      progress: 85,
     },
     {
       rank: 3,
@@ -40,6 +46,8 @@ export default function Leaderboard() {
       gain: "+190 this week",
       avatarGradient: "from-amber-600 to-amber-700",
       initials: "GH",
+      isDiscordLinked: false,
+      progress: 78,
     },
     {
       rank: 4,
@@ -49,6 +57,8 @@ export default function Leaderboard() {
       gain: "+120 this week",
       avatarGradient: "from-blue-500 to-indigo-600",
       initials: "GR",
+      isDiscordLinked: true,
+      progress: 64,
     },
     {
       rank: 5,
@@ -58,6 +68,8 @@ export default function Leaderboard() {
       gain: "+90 this week",
       avatarGradient: "from-purple-500 to-pink-500",
       initials: "SN",
+      isDiscordLinked: false,
+      progress: 58,
     },
   ];
 
@@ -118,32 +130,48 @@ export default function Leaderboard() {
         {contributors.map((user) => (
           <div
             key={user.rank}
-            className="flex items-center gap-3 p-3 rounded-lg border border-zinc-900/50 bg-zinc-950/20 hover:bg-zinc-900/40 transition-all duration-200"
+            className="group relative flex flex-col gap-2 p-3 rounded-lg border border-zinc-900/50 bg-zinc-950/20 hover:bg-zinc-900/40 transition-all duration-200"
           >
-            <div className="flex w-6 justify-center shrink-0">
-              {getRankBadge(user.rank)}
-            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex w-6 justify-center shrink-0">
+                {getRankBadge(user.rank)}
+              </div>
 
-            <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarGradient} font-bold text-black text-xs`}>
-              {user.initials}
-            </div>
+              <div className={`relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${user.avatarGradient} font-bold text-black text-xs`}>
+                {user.initials}
+              </div>
 
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white truncate">
-                {user.name}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold text-white truncate flex items-center gap-1.5">
+                  {user.name}
+                  {user.isDiscordLinked && (
+                    <span className="text-[#5865F2]">
+                      <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M20.317 4.37a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 11.721 11.721 0 00-.617-1.25.077.077 0 00-.079-.037 19.736 19.736 0 00-4.885 1.515.069.069 0 00-.032.027C.533 9.048-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028c.462-.63.874-1.295 1.226-1.994.052-.102.001-.226-.112-.27a13.067 13.067 0 01-1.875-.893.077.077 0 01-.007-.128c.126-.094.252-.192.372-.291a.074.074 0 01.077-.01c3.927 1.793 8.18 1.793 12.061 0a.074.074 0 01.078.01c.12.099.246.197.373.291a.077.077 0 01-.006.127 12.299 12.299 0 01-1.875.894.077.077 0 00-.11.27c.357.698.765 1.362 1.227 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z" />
+                      </svg>
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-zinc-500 truncate">
+                  {user.badge}
+                </div>
               </div>
-              <div className="text-[10px] text-zinc-500 truncate">
-                {user.badge}
+
+              <div className="text-right shrink-0">
+                <div className="text-sm font-bold text-white tracking-tight">
+                  {user.points}
+                </div>
+                <div className="text-[10px] font-semibold text-emerald-400">
+                  {user.gain}
+                </div>
               </div>
             </div>
-
-            <div className="text-right shrink-0">
-              <div className="text-sm font-bold text-white tracking-tight">
-                {user.points}
-              </div>
-              <div className="text-[10px] font-semibold text-emerald-400">
-                {user.gain}
-              </div>
+            
+            <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-violet-600/60 to-indigo-500/60"
+                style={{ width: `${user.progress}%` }}
+              ></div>
             </div>
           </div>
         ))}
