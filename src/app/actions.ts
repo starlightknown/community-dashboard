@@ -1,11 +1,12 @@
 "use server";
 
-import { signOut, signIn } from "@/lib/auth";
+import { signOut } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 export async function handleSignOut() {
   await signOut({ redirect: true });
 }
 
 export async function handleDiscordSignIn() {
-  await signIn("discord");
+  redirect("/api/auth/signin/discord");
 }
