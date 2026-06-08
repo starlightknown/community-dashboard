@@ -92,11 +92,47 @@ async function fetchRecentMessages(channelId: string) {
   }
 }
 
+async function initializePoints(members: any[]) {
+  try {
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL || "http://localhost:3002"}/api/points/init`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ members }),
+      }
+    );
+    return await response.json();
+  } catch (error) {
+    console.error("Error initializing points:", error);
+    return null;
+  }
+}
+
+async function fetchLeaderboard() {
+  try {
+    const response = await fetch(
+      `${process.env.NEXTAUTH_URL || "http://localhost:3002"}/api/points/leaderboard`,
+      { cache: "no-store" }
+    );
+    if (!response.ok) {
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching leaderboard:", error);
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   const guild = await fetchGuildData();
   const members = await fetchMembersData();
   const channels = await fetchChannelsData();
+  
+  await initializePoints(members);
+  const leaderboard = await fetchLeaderboard();
   
   let recentMessages: any[] = [];
   if (channels.length > 0) {
@@ -152,7 +188,7 @@ export default async function DashboardPage() {
               <ActivityFeed messages={recentMessages} />
             </div>
             <div className="lg:col-span-1">
-              <Leaderboard members={members} />
+              <Leaderboard leaderboard={leaderboard} />
             </div>
           </div>
         </div>

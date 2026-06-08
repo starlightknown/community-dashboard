@@ -2,6 +2,15 @@
 
 import React from "react";
 
+interface DBUserPoints {
+  id: string;
+  userId: string;
+  username: string;
+  points: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface DiscordMember {
   user: {
     id: string;
@@ -27,54 +36,50 @@ interface LeaderboardUser {
   roleColor: string;
 }
 
-function transformMembersToLeaderboard(members: DiscordMember[]): LeaderboardUser[] {
-  return members
-    .slice(0, 10)
-    .map((member, index) => {
-      const username = member.user.username;
-      const initials = username
-        .split(" ")
-        .map((n: string) => n[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-      
-      const hashCode = member.user.id.split("").reduce((a: number, b: string) => {
-        const hash = a << 5 - a + b.charCodeAt(0);
-        return hash & hash;
-      }, 0);
+function transformDBToLeaderboard(dbUsers: DBUserPoints[]): LeaderboardUser[] {
+  const avatarGradients = [
+    "from-amber-400 to-yellow-500",
+    "from-violet-400 to-indigo-500",
+    "from-emerald-400 to-teal-500",
+    "from-pink-400 to-rose-500",
+    "from-blue-400 to-cyan-500",
+  ];
 
-      const points = Math.abs(hashCode % 3000) + 1000;
-      const gain = Math.abs((hashCode >> 8) % 300);
-      const progress = 70 + (Math.abs((hashCode >> 16) % 30));
+  return dbUsers.slice(0, 10).map((user, index) => {
+    const initials = user.username
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
 
-      const avatarGradients = [
-        "from-amber-400 to-yellow-500",
-        "from-violet-400 to-indigo-500",
-        "from-emerald-400 to-teal-500",
-        "from-pink-400 to-rose-500",
-        "from-blue-400 to-cyan-500",
-      ];
+    const hashCode = user.userId.split("").reduce((a: number, b: string) => {
+      const hash = a << 5 - a + b.charCodeAt(0);
+      return hash & hash;
+    }, 0);
 
-      return {
-        rank: index + 1,
-        name: username,
-        badge: index === 0 ? "Server Legend" : index === 1 ? "Top Contributor" : "Active Member",
-        points: `${points.toLocaleString()} pts`,
-        gain: `+${gain} this week`,
-        avatarGradient: avatarGradients[index % avatarGradients.length],
-        initials,
-        isDiscordLinked: true,
-        progress,
-        role: member.roles.length > 0 ? "Member" : "Newbie",
-        roleColor: index === 0 ? "text-amber-400 border-amber-400/20 bg-amber-400/5" : "text-violet-400 border-violet-400/20 bg-violet-400/5",
-      };
-    });
+    const gain = Math.abs((hashCode >> 8) % 300);
+    const progress = Math.min(100, (user.points / 5000) * 100);
+
+    return {
+      rank: index + 1,
+      name: user.username,
+      badge: index === 0 ? "Server Legend" : index === 1 ? "Top Contributor" : "Active Member",
+      points: `${user.points.toLocaleString()} pts`,
+      gain: `+${gain} this week`,
+      avatarGradient: avatarGradients[index % avatarGradients.length],
+      initials,
+      isDiscordLinked: true,
+      progress,
+      role: "Member",
+      roleColor: index === 0 ? "text-amber-400 border-amber-400/20 bg-amber-400/5" : "text-violet-400 border-violet-400/20 bg-violet-400/5",
+    };
+  });
 }
 
-export default function Leaderboard({ members = [] }: { members?: DiscordMember[] }) {
-  const contributors: LeaderboardUser[] = members.length > 0 
-    ? transformMembersToLeaderboard(members)
+export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUserPoints[] }) {
+  const contributors: LeaderboardUser[] = leaderboard.length > 0 
+    ? transformDBToLeaderboard(leaderboard)
     : [
     {
       rank: 1,
