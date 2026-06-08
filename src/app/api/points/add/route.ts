@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const prisma = new PrismaClient();
   try {
     const { userId, username, points } = await request.json();
 
@@ -27,7 +26,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error adding points:", error);
     return NextResponse.json({ error: "Failed to add points" }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

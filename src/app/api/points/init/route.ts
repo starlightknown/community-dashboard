@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 
 export async function POST(request: Request) {
-  const prisma = new PrismaClient();
   try {
     const { members } = await request.json();
 
@@ -29,7 +28,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error initializing members:", error);
     return NextResponse.json({ error: "Failed to initialize members" }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

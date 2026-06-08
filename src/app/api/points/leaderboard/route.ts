@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
-  const prisma = new PrismaClient();
   try {
     const leaderboard = await prisma.userPoints.findMany({
       orderBy: { points: "desc" },
@@ -13,7 +12,5 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
     return NextResponse.json({ error: "Failed to fetch leaderboard" }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
