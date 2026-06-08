@@ -69,6 +69,11 @@ function transformMessagesToActivities(messages: DiscordMessage[]): ActivityItem
       .toUpperCase()
       .slice(0, 2);
 
+    const hashCode = msg.id.split("").reduce((a: number, b: string) => {
+      const hash = a << 5 - a + b.charCodeAt(0);
+      return hash & hash;
+    }, 0);
+
     return {
       id: msg.id,
       user: {
@@ -84,8 +89,8 @@ function transformMessagesToActivities(messages: DiscordMessage[]): ActivityItem
       targetHref: "#",
       time: formatTimeAgo(msg.timestamp),
       tags: ["Discord", "Message"],
-      upvotes: Math.floor(Math.random() * 50),
-      replies: Math.floor(Math.random() * 10),
+      upvotes: Math.abs(hashCode % 50),
+      replies: Math.abs((hashCode >> 8) % 10),
     };
   });
 }

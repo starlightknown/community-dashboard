@@ -39,7 +39,15 @@ function transformMembersToLeaderboard(members: DiscordMember[]): LeaderboardUse
         .toUpperCase()
         .slice(0, 2);
       
-      const points = Math.floor(Math.random() * 3000) + 1000;
+      const hashCode = member.user.id.split("").reduce((a: number, b: string) => {
+        const hash = a << 5 - a + b.charCodeAt(0);
+        return hash & hash;
+      }, 0);
+
+      const points = Math.abs(hashCode % 3000) + 1000;
+      const gain = Math.abs((hashCode >> 8) % 300);
+      const progress = 70 + (Math.abs((hashCode >> 16) % 30));
+
       const avatarGradients = [
         "from-amber-400 to-yellow-500",
         "from-violet-400 to-indigo-500",
@@ -53,11 +61,11 @@ function transformMembersToLeaderboard(members: DiscordMember[]): LeaderboardUse
         name: username,
         badge: index === 0 ? "Server Legend" : index === 1 ? "Top Contributor" : "Active Member",
         points: `${points.toLocaleString()} pts`,
-        gain: `+${Math.floor(Math.random() * 300)} this week`,
+        gain: `+${gain} this week`,
         avatarGradient: avatarGradients[index % avatarGradients.length],
         initials,
         isDiscordLinked: true,
-        progress: 70 + Math.random() * 30,
+        progress,
         role: member.roles.length > 0 ? "Member" : "Newbie",
         roleColor: index === 0 ? "text-amber-400 border-amber-400/20 bg-amber-400/5" : "text-violet-400 border-violet-400/20 bg-violet-400/5",
       };
