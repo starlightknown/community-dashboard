@@ -8,5 +8,5 @@ export async function handleSignOut() {
 }
 
 export async function handleDiscordSignIn() {
-  redirect("/api/auth/signin/discord");
+  redirect("/auth/signin");
 }
