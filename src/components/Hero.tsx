@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 
 interface Guild {
   id: string;
@@ -11,27 +11,7 @@ interface Guild {
   created_at?: string;
 }
 
-export default function Hero() {
-  const [guild, setGuild] = useState<Guild | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchGuild = async () => {
-      try {
-        const response = await fetch("/api/discord/guilds");
-        const data = await response.json();
-        if (data && !data.error) {
-          setGuild(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch guild:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchGuild();
-  }, []);
+export default function Hero({ guild }: { guild: Guild | null }) {
 
   const metrics = [
     {

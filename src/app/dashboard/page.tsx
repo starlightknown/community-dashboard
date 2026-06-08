@@ -7,8 +7,29 @@ import ActionCards from "../../components/ActionCards";
 import ActivityFeed from "../../components/ActivityFeed";
 import Leaderboard from "../../components/Leaderboard";
 
+const GUILD_ID = "1236805163784736850";
+
+async function fetchGuildData() {
+  try {
+    const response = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}`, {
+      headers: {
+        Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+      },
+    });
+    if (!response.ok) {
+      console.error("Failed to fetch guild:", response.status);
+      return null;
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching guild:", error);
+    return null;
+  }
+}
+
 export default async function DashboardPage() {
   const session = await auth();
+  const guild = await fetchGuildData();
 
   if (!session) {
     return (
@@ -51,7 +72,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-black text-zinc-100 font-sans selection:bg-violet-500/30 selection:text-white">
       <Header user={session.user} />
       <main className="flex-1 pb-16 relative">
-        <Hero />
+        <Hero guild={guild} />
         <ActionCards />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
