@@ -25,8 +25,8 @@ export default function Hero() {
       highlight: true,
     },
     {
-      label: "Total Projects",
-      value: "342 shared",
+      label: "Server Total",
+      value: "8,420 members",
       icon: (
         <svg
           className="h-5 w-5 text-violet-400"
@@ -38,14 +38,14 @@ export default function Hero() {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+            d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"
           />
         </svg>
       ),
     },
     {
-      label: "Discord Messages",
-      value: "42,850 total",
+      label: "Messages Tracking",
+      value: "42,850 logs",
       icon: (
         <svg
           className="h-5 w-5 text-indigo-400"
@@ -57,8 +57,8 @@ export default function Hero() {
       ),
     },
     {
-      label: "Your Community Rank",
-      value: "#42 (Pro Builder)",
+      label: "Community Rank",
+      value: "#42 (Mee6 Elite)",
       icon: (
         <svg
           className="h-5 w-5 text-amber-400"
@@ -86,6 +86,10 @@ export default function Hero() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
           <div className="text-center sm:text-left max-w-2xl">
+            <div className="flex items-center gap-2 mb-4 justify-center sm:justify-start">
+              <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Server Live Sync Active</span>
+            </div>
             <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
               Welcome to the{" "}
               <span className="bg-gradient-to-r from-violet-400 via-violet-500 to-indigo-500 bg-clip-text text-transparent">
@@ -93,7 +97,7 @@ export default function Hero() {
               </span>
             </h1>
             <p className="text-lg sm:text-xl text-zinc-400">
-              Where builders share, learn, and grow together.
+              Where builders share, learn, and grow together on Discord.
             </p>
           </div>
 

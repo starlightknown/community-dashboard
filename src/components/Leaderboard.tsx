@@ -12,6 +12,8 @@ interface LeaderboardUser {
   initials: string;
   isDiscordLinked?: boolean;
   progress: number;
+  role: string;
+  roleColor: string;
 }
 
 export default function Leaderboard() {
@@ -26,6 +28,8 @@ export default function Leaderboard() {
       initials: "AL",
       isDiscordLinked: true,
       progress: 92,
+      role: "Server Legend",
+      roleColor: "text-amber-400 border-amber-400/20 bg-amber-400/5",
     },
     {
       rank: 2,
@@ -37,6 +41,8 @@ export default function Leaderboard() {
       initials: "LT",
       isDiscordLinked: true,
       progress: 85,
+      role: "Core Contributor",
+      roleColor: "text-violet-400 border-violet-400/20 bg-violet-400/5",
     },
     {
       rank: 3,
@@ -48,6 +54,8 @@ export default function Leaderboard() {
       initials: "GH",
       isDiscordLinked: false,
       progress: 78,
+      role: "Moderator",
+      roleColor: "text-emerald-400 border-emerald-400/20 bg-emerald-400/5",
     },
     {
       rank: 4,
@@ -59,6 +67,8 @@ export default function Leaderboard() {
       initials: "GR",
       isDiscordLinked: true,
       progress: 64,
+      role: "Pro Builder",
+      roleColor: "text-blue-400 border-blue-400/20 bg-blue-400/5",
     },
     {
       rank: 5,
@@ -70,6 +80,8 @@ export default function Leaderboard() {
       initials: "SN",
       isDiscordLinked: false,
       progress: 58,
+      role: "Early Adopter",
+      roleColor: "text-pink-400 border-pink-400/20 bg-pink-400/5",
     },
   ];
 
@@ -152,8 +164,13 @@ export default function Leaderboard() {
                     </span>
                   )}
                 </div>
-                <div className="text-[10px] text-zinc-500 truncate">
-                  {user.badge}
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider border ${user.roleColor}`}>
+                    {user.role}
+                  </span>
+                  <span className="text-[10px] text-zinc-500 truncate italic">
+                    {user.badge}
+                  </span>
                 </div>
               </div>
 
