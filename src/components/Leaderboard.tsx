@@ -2,6 +2,17 @@
 
 import React from "react";
 
+interface DiscordMember {
+  user: {
+    id: string;
+    username: string;
+    avatar: string;
+    discriminator: string;
+  };
+  joined_at: string;
+  roles: string[];
+}
+
 interface LeaderboardUser {
   rank: number;
   name: string;
@@ -16,8 +27,47 @@ interface LeaderboardUser {
   roleColor: string;
 }
 
-export default function Leaderboard() {
-  const contributors: LeaderboardUser[] = [
+function transformMembersToLeaderboard(members: DiscordMember[]): LeaderboardUser[] {
+  return members
+    .slice(0, 10)
+    .map((member, index) => {
+      const username = member.user.username;
+      const initials = username
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2);
+      
+      const points = Math.floor(Math.random() * 3000) + 1000;
+      const avatarGradients = [
+        "from-amber-400 to-yellow-500",
+        "from-violet-400 to-indigo-500",
+        "from-emerald-400 to-teal-500",
+        "from-pink-400 to-rose-500",
+        "from-blue-400 to-cyan-500",
+      ];
+
+      return {
+        rank: index + 1,
+        name: username,
+        badge: index === 0 ? "Server Legend" : index === 1 ? "Top Contributor" : "Active Member",
+        points: `${points.toLocaleString()} pts`,
+        gain: `+${Math.floor(Math.random() * 300)} this week`,
+        avatarGradient: avatarGradients[index % avatarGradients.length],
+        initials,
+        isDiscordLinked: true,
+        progress: 70 + Math.random() * 30,
+        role: member.roles.length > 0 ? "Member" : "Newbie",
+        roleColor: index === 0 ? "text-amber-400 border-amber-400/20 bg-amber-400/5" : "text-violet-400 border-violet-400/20 bg-violet-400/5",
+      };
+    });
+}
+
+export default function Leaderboard({ members = [] }: { members?: DiscordMember[] }) {
+  const contributors: LeaderboardUser[] = members.length > 0 
+    ? transformMembersToLeaderboard(members)
+    : [
     {
       rank: 1,
       name: "Ada Lovelace",

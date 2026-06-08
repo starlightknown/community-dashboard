@@ -24,7 +24,6 @@ async function fetchGuildData() {
       return null;
     }
     const data = await response.json();
-    console.log("Guild data:", data);
     return data;
   } catch (error) {
     console.error("Error fetching guild:", error);
@@ -32,9 +31,77 @@ async function fetchGuildData() {
   }
 }
 
+async function fetchMembersData() {
+  try {
+    const response = await fetch(
+      `https://discord.com/api/v10/guilds/${GUILD_ID}/members?limit=100`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching members:", error);
+    return [];
+  }
+}
+
+async function fetchChannelsData() {
+  try {
+    const response = await fetch(
+      `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      return [];
+    }
+    const channels = await response.json();
+    return channels.filter((ch: any) => ch.type === 0);
+  } catch (error) {
+    console.error("Error fetching channels:", error);
+    return [];
+  }
+}
+
+async function fetchRecentMessages(channelId: string) {
+  try {
+    const response = await fetch(
+      `https://discord.com/api/v10/channels/${channelId}/messages?limit=20`,
+      {
+        headers: {
+          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+        },
+      }
+    );
+    if (!response.ok) {
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    return [];
+  }
+}
+
 export default async function DashboardPage() {
   const session = await auth();
   const guild = await fetchGuildData();
+  const members = await fetchMembersData();
+  const channels = await fetchChannelsData();
+  
+  let recentMessages: any[] = [];
+  if (channels.length > 0) {
+    recentMessages = await fetchRecentMessages(channels[0].id);
+  }
 
   if (!session) {
     return (
@@ -82,10 +149,10 @@ export default async function DashboardPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <ActivityFeed />
+              <ActivityFeed messages={recentMessages} />
             </div>
             <div className="lg:col-span-1">
-              <Leaderboard />
+              <Leaderboard members={members} />
             </div>
           </div>
         </div>

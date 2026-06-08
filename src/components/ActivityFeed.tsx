@@ -2,6 +2,18 @@
 
 import React, { useState } from "react";
 
+interface DiscordMessage {
+  id: string;
+  author: {
+    id: string;
+    username: string;
+    avatar: string;
+  };
+  content: string;
+  timestamp: string;
+  reactions?: Array<{ emoji: { name: string }; count: number }>;
+}
+
 interface ActivityItem {
   id: string;
   user: {
@@ -22,8 +34,65 @@ interface ActivityItem {
   hasUpvoted?: boolean;
 }
 
-export default function ActivityFeed() {
-  const [activities, setActivities] = useState<ActivityItem[]>([
+function formatTimeAgo(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function transformMessagesToActivities(messages: DiscordMessage[]): ActivityItem[] {
+  const tagStyles = [
+    "text-violet-400 bg-violet-500/10 border-violet-500/20",
+    "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+    "text-amber-400 bg-amber-500/10 border-amber-500/20",
+    "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  ];
+
+  const avatarGradients = [
+    "from-violet-500 to-fuchsia-500",
+    "from-emerald-500 to-teal-500",
+    "from-amber-500 to-orange-500",
+    "from-cyan-500 to-blue-500",
+  ];
+
+  return messages.slice(0, 8).map((msg, index) => {
+    const username = msg.author.username;
+    const initials = username
+      .split(" ")
+      .map((n: string) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+
+    return {
+      id: msg.id,
+      user: {
+        name: username,
+        tag: "Community Member",
+        tagStyle: tagStyles[index % tagStyles.length],
+        avatarGradient: avatarGradients[index % avatarGradients.length],
+        initials,
+        isDiscordVerified: true,
+      },
+      actionType: "sent a message in #general",
+      targetTitle: msg.content.slice(0, 100),
+      targetHref: "#",
+      time: formatTimeAgo(msg.timestamp),
+      tags: ["Discord", "Message"],
+      upvotes: Math.floor(Math.random() * 50),
+      replies: Math.floor(Math.random() * 10),
+    };
+  });
+}
+
+export default function ActivityFeed({ messages = [] }: { messages?: DiscordMessage[] }) {
+  const [activities, setActivities] = useState<ActivityItem[]>(
+    messages.length > 0 ? transformMessagesToActivities(messages) : [
     {
       id: "1",
       user: {
