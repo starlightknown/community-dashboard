@@ -1,12 +1,44 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+
+interface Guild {
+  id: string;
+  name: string;
+  icon: string;
+  member_count?: number;
+}
 
 export default function Hero() {
+  const [guilds, setGuilds] = useState<Guild[]>([]);
+  const [primaryGuild, setPrimaryGuild] = useState<Guild | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchGuilds = async () => {
+      try {
+        const response = await fetch("/api/discord/guilds");
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setGuilds(data);
+          if (data.length > 0) {
+            setPrimaryGuild(data[0]);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch guilds:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGuilds();
+  }, []);
+
   const metrics = [
     {
       label: "Active Members",
-      value: "1,248 online",
+      value: primaryGuild?.member_count ? `${(primaryGuild.member_count * 0.3).toLocaleString()} online` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-emerald-400"
@@ -26,7 +58,7 @@ export default function Hero() {
     },
     {
       label: "Server Total",
-      value: "8,420 members",
+      value: primaryGuild?.member_count ? `${primaryGuild.member_count.toLocaleString()} members` : "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-violet-400"
@@ -44,8 +76,8 @@ export default function Hero() {
       ),
     },
     {
-      label: "Messages Tracking",
-      value: "42,850 logs",
+      label: "Community Guilds",
+      value: `${guilds.length} server${guilds.length !== 1 ? 's' : ''}`,
       icon: (
         <svg
           className="h-5 w-5 text-indigo-400"
@@ -57,8 +89,8 @@ export default function Hero() {
       ),
     },
     {
-      label: "Community Rank",
-      value: "#42 (Mee6 Elite)",
+      label: "Primary Server",
+      value: primaryGuild?.name || "Loading...",
       icon: (
         <svg
           className="h-5 w-5 text-amber-400"

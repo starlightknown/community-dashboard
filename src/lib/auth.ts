@@ -9,6 +9,11 @@ export const authConfig: NextAuthOptions = {
       clientId: process.env.DISCORD_CLIENT_ID || "",
       clientSecret: process.env.DISCORD_CLIENT_SECRET || "",
       allowDangerousEmailAccountLinking: true,
+      authorization: {
+        params: {
+          scope: "identify email guilds",
+        },
+      },
     }),
   ],
   pages: {
