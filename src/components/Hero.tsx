@@ -53,7 +53,7 @@ export default function Hero({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-1.5 h-1.5 bg-[#3DD68C] rounded-full animate-pulse shadow-[0_0_8px_rgba(61,214,140,0.5)]" />
-            <span className="text-[10px] font-bold tracking-[0.2em] text-[#3DD68C] uppercase">System Real-time Sync Active</span>
+            <span className="text-[10px] font-bold tracking-[0.2em] text-[#3DD68C] uppercase">System Daily Sync Active</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             {guild?.name || "Zencoder"} Dashboard
