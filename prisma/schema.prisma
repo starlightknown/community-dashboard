@@ -12,11 +12,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model UserPoints {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  username  String
-  points    Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Member {
+  id              String        @id
+  username        String        @unique
+  joinedAt        DateTime      @default(now())
+  redditHandle    String?
+  xHandle         String?
+  totalPoints     Int           @default(0)
+  weeklyPoints    Int           @default(0)
+  streakDays      Int           @default(0)
+  streakActive    Boolean       @default(false)
+  lastActive      DateTime?
+  tier            String        @default("LURKER")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  pointEvents     PointEvent[]
+  socialLinks     SocialLink[]
+  mentions        MentionSubmission[]
+}
+
+model PointEvent {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  actionType      String
+  pointsAwarded   Int
+  multipliers     String   @default("[]")
+  metadata        String   @default("{}")
+  weekKey         String
+  createdAt       DateTime @default(now())
+  
+  @@index([memberId])
+  @@index([weekKey])
+  @@index([actionType])
+}
+
+model SocialLink {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  platform        String
+  handle          String
+  verifiedAt      DateTime
+  bonusAwarded    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([memberId, platform])
+  @@index([memberId])
+}
+
+model MentionSubmission {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  platform        String
+  postUrl         String
+  submittedAt     DateTime @default(now())
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  status          String   @default("PENDING")
+  pointsAwarded   Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([memberId])
+  @@index([status])
 }

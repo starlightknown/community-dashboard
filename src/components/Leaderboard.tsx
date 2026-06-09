@@ -2,24 +2,14 @@
 
 import React from "react";
 
-interface DBUserPoints {
+interface Member {
   id: string;
-  userId: string;
   username: string;
-  points: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface DiscordMember {
-  user: {
-    id: string;
-    username: string;
-    avatar: string;
-    discriminator: string;
-  };
-  joined_at: string;
-  roles: string[];
+  totalPoints: number;
+  weeklyPoints: number;
+  tier: string;
+  streakDays: number;
+  streakActive: boolean;
 }
 
 interface LeaderboardUser {
@@ -34,9 +24,22 @@ interface LeaderboardUser {
   progress: number;
   role: string;
   roleColor: string;
+  tier: string;
+  streakDays: number;
 }
 
-function transformDBToLeaderboard(dbUsers: DBUserPoints[]): LeaderboardUser[] {
+function getTierColor(tier: string): string {
+  const colors: { [key: string]: string } = {
+    CHAMPION: "text-amber-400 border-amber-400/20 bg-amber-400/5",
+    CONTRIBUTOR: "text-violet-400 border-violet-400/20 bg-violet-400/5",
+    BUILDER: "text-emerald-400 border-emerald-400/20 bg-emerald-400/5",
+    MEMBER: "text-cyan-400 border-cyan-400/20 bg-cyan-400/5",
+    LURKER: "text-slate-400 border-slate-400/20 bg-slate-400/5",
+  };
+  return colors[tier] || colors.LURKER;
+}
+
+function transformDBToLeaderboard(members: Member[]): LeaderboardUser[] {
   const avatarGradients = [
     "from-amber-400 to-yellow-500",
     "from-violet-400 to-indigo-500",
@@ -45,39 +48,50 @@ function transformDBToLeaderboard(dbUsers: DBUserPoints[]): LeaderboardUser[] {
     "from-blue-400 to-cyan-500",
   ];
 
-  return dbUsers.slice(0, 10).map((user, index) => {
-    const initials = user.username
+  return members.slice(0, 10).map((member, index) => {
+    const initials = member.username
       .split(" ")
       .map((n: string) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
 
-    const hashCode = user.userId.split("").reduce((a: number, b: string) => {
+    const hashCode = member.id.split("").reduce((a: number, b: string) => {
       const hash = a << 5 - a + b.charCodeAt(0);
       return hash & hash;
     }, 0);
 
     const gain = Math.abs((hashCode >> 8) % 300);
-    const progress = Math.min(100, (user.points / 5000) * 100);
+    const progress = Math.min(100, (member.totalPoints / 5000) * 100);
+    const tierBadges: { [key: string]: string } = {
+      CHAMPION: "Champion",
+      CONTRIBUTOR: "Contributor",
+      BUILDER: "Builder",
+      MEMBER: "Member",
+      LURKER: "Lurker",
+    };
 
+    const streakBadge = member.streakActive ? `🔥 ${member.streakDays} day streak` : null;
+    
     return {
       rank: index + 1,
-      name: user.username,
-      badge: index === 0 ? "Server Legend" : index === 1 ? "Top Contributor" : "Active Member",
-      points: `${user.points.toLocaleString()} pts`,
-      gain: `+${gain} this week`,
+      name: member.username,
+      badge: streakBadge || tierBadges[member.tier] || "Member",
+      points: `${member.totalPoints.toLocaleString()} pts`,
+      gain: `+${member.weeklyPoints} this week`,
       avatarGradient: avatarGradients[index % avatarGradients.length],
       initials,
       isDiscordLinked: true,
       progress,
-      role: "Member",
-      roleColor: index === 0 ? "text-amber-400 border-amber-400/20 bg-amber-400/5" : "text-violet-400 border-violet-400/20 bg-violet-400/5",
+      role: tierBadges[member.tier] || "Member",
+      roleColor: getTierColor(member.tier),
+      tier: member.tier,
+      streakDays: member.streakDays,
     };
   });
 }
 
-export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUserPoints[] }) {
+export default function Leaderboard({ leaderboard = [] }: { leaderboard?: Member[] }) {
   const contributors: LeaderboardUser[] = leaderboard.length > 0 
     ? transformDBToLeaderboard(leaderboard)
     : [
@@ -91,8 +105,10 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUser
       initials: "AL",
       isDiscordLinked: true,
       progress: 92,
-      role: "Server Legend",
+      role: "Champion",
       roleColor: "text-amber-400 border-amber-400/20 bg-amber-400/5",
+      tier: "CHAMPION",
+      streakDays: 5,
     },
     {
       rank: 2,
@@ -104,8 +120,10 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUser
       initials: "LT",
       isDiscordLinked: true,
       progress: 85,
-      role: "Core Contributor",
+      role: "Contributor",
       roleColor: "text-violet-400 border-violet-400/20 bg-violet-400/5",
+      tier: "CONTRIBUTOR",
+      streakDays: 3,
     },
     {
       rank: 3,
@@ -117,8 +135,10 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUser
       initials: "GH",
       isDiscordLinked: false,
       progress: 78,
-      role: "Moderator",
+      role: "Builder",
       roleColor: "text-emerald-400 border-emerald-400/20 bg-emerald-400/5",
+      tier: "BUILDER",
+      streakDays: 2,
     },
     {
       rank: 4,
@@ -130,8 +150,10 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUser
       initials: "GR",
       isDiscordLinked: true,
       progress: 64,
-      role: "Pro Builder",
+      role: "Builder",
       roleColor: "text-blue-400 border-blue-400/20 bg-blue-400/5",
+      tier: "BUILDER",
+      streakDays: 1,
     },
     {
       rank: 5,
@@ -143,8 +165,10 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: DBUser
       initials: "SN",
       isDiscordLinked: false,
       progress: 58,
-      role: "Early Adopter",
+      role: "Member",
       roleColor: "text-pink-400 border-pink-400/20 bg-pink-400/5",
+      tier: "MEMBER",
+      streakDays: 0,
     },
   ];
 

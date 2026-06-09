@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { getLeaderboard } from "@/lib/points";
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const leaderboard = await prisma.userPoints.findMany({
-      orderBy: { points: "desc" },
-      take: 100,
-    });
+    const { searchParams } = new URL(request.url);
+    const period = (searchParams.get('period') || 'all-time') as 'all-time' | 'weekly';
+    const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
+
+    const leaderboard = await getLeaderboard(period, limit);
 
     return NextResponse.json(leaderboard);
   } catch (error) {

@@ -13,18 +13,17 @@ export async function POST(request: Request) {
       const userId = member.user.id;
       const username = member.user.username;
 
-      await prisma.userPoints.upsert({
-        where: { userId },
+      await prisma.member.upsert({
+        where: { id: userId },
         update: {},
         create: {
-          userId,
+          id: userId,
           username,
-          points: 0,
         },
       });
     }
 
-    return NextResponse.json({ message: `Initialized ${members.length} members with 0 points` });
+    return NextResponse.json({ message: `Initialized ${members.length} members` });
   } catch (error) {
     console.error("Error initializing members:", error);
     return NextResponse.json({ error: "Failed to initialize members" }, { status: 500 });
