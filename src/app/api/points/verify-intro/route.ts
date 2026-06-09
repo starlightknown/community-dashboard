@@ -37,12 +37,19 @@ export async function POST(request: Request) {
     }
 
     const messages = await response.json();
-    const hasIntro = messages.some((m: any) => m.author.id === memberId);
+    const userIntro = messages.find((m: any) => m.author.id === memberId);
 
-    if (!hasIntro) {
+    if (!userIntro) {
       return NextResponse.json(
         { error: "No message found in #introductions. Please introduce yourself first!" },
         { status: 404 }
+      );
+    }
+
+    if (userIntro.content.length < 20) {
+      return NextResponse.json(
+        { error: "Your introduction is too short. Please provide a more detailed intro (min 20 chars)!" },
+        { status: 400 }
       );
     }
 
@@ -50,6 +57,7 @@ export async function POST(request: Request) {
     const result = await awardPoints(memberId, "ONBOARDING_INTRO", {
       channelId: INTRO_CHANNEL_ID,
       verifiedVia: "dashboard-claim",
+      messageLength: userIntro.content.length,
     });
 
     return NextResponse.json(result);
