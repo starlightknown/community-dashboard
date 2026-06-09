@@ -20,6 +20,7 @@ interface UserMember {
   redditHandle?: string | null;
   xHandle?: string | null;
   socialLinks?: SocialLink[];
+  onboardingIntro?: boolean;
 }
 
 interface ProfileModalProps {
@@ -70,15 +71,20 @@ export default function ProfileModal({
   const [linkingX, setLinkingX] = useState(false);
   const [redditMsg, setRedditMsg] = useState("");
   const [xMsg, setXMsg] = useState("");
+  const [introMsg, setIntroMsg] = useState("");
+  const [claimingIntro, setClaimingIntro] = useState(false);
+  const [loading, setLoading] = useState(!initialMember);
 
   useEffect(() => {
     if (isOpen && userId) {
+      setLoading(true);
       fetch(`/api/points/member?id=${userId}`)
         .then((r) => r.ok ? r.json() : null)
         .then((data) => {
           if (data && !data.error) setMember(data);
         })
-        .catch(() => {});
+        .catch(() => {})
+        .finally(() => setLoading(false));
     }
   }, [isOpen, userId]);
 
@@ -86,6 +92,7 @@ export default function ProfileModal({
     if (!isOpen) {
       setRedditMsg("");
       setXMsg("");
+      setIntroMsg("");
       setRedditHandle("");
       setXHandle("");
     }
@@ -95,7 +102,6 @@ export default function ProfileModal({
 
   const tier = member?.tier || "LURKER";
   const tierLabel = TIER_LABELS[tier] || tier;
-  const tierColor = TIER_COLORS[tier] || TIER_COLORS.LURKER;
   const totalPoints = member?.totalPoints ?? 0;
   const weeklyPoints = member?.weeklyPoints ?? 0;
   const maxPts = TIER_NEXT_MAX[tier] ?? 100;
@@ -103,6 +109,30 @@ export default function ProfileModal({
 
   const redditLinked = member?.socialLinks?.find((l) => l.platform === "REDDIT") || (member?.redditHandle ? { handle: member.redditHandle } : null);
   const xLinked = member?.socialLinks?.find((l) => l.platform === "X") || (member?.xHandle ? { handle: member.xHandle } : null);
+
+  async function claimIntro() {
+    setClaimingIntro(true);
+    setIntroMsg("");
+    try {
+      const res = await fetch("/api/points/verify-intro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: userId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setIntroMsg(`✅ Claimed! +${data.points} pts`);
+        const updated = await fetch(`/api/points/member?id=${userId}`).then((r) => r.json());
+        if (updated && !updated.error) setMember(updated);
+      } else {
+        setIntroMsg(`❌ ${data.error}`);
+      }
+    } catch {
+      setIntroMsg("❌ Failed to verify intro");
+    } finally {
+      setClaimingIntro(false);
+    }
+  }
 
   async function linkSocial(platform: "REDDIT" | "X", handle: string, setLoading: (v: boolean) => void, setMsg: (v: string) => void) {
     if (!handle.trim()) {
@@ -119,7 +149,7 @@ export default function ProfileModal({
       });
       const data = await res.json();
       if (res.ok) {
-        setMsg(`✅ Linked! +${data.pointsAwarded} pts awarded`);
+        setMsg(`✅ Linked! +${data.pointsAwarded} pts`);
         const updated = await fetch(`/api/points/member?id=${userId}`).then((r) => r.json());
         if (updated && !updated.error) setMember(updated);
       } else {
@@ -133,150 +163,190 @@ export default function ProfileModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/5 border-b border-zinc-800/60 p-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-orange-500/20">
-                {userInitials}
-              </div>
-              <div>
-                <div className="text-white font-bold text-base">{userName || member?.username || "Community Member"}</div>
-                <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider border ${tierColor}`}>
-                  {tierLabel}
-                  {member?.streakActive && <span className="ml-1">🔥</span>}
-                </span>
-              </div>
-            </div>
-            <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors p-1">
-              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={onClose} />
+      
+      <div className="relative w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        {/* Header */}
+        <div className="p-8 border-b border-white/5 bg-white/[0.02]">
+          <div className="flex items-center justify-between mb-8">
+            <div className="text-[10px] font-bold tracking-[0.2em] text-[#FF6B2B] uppercase">Member Profile</div>
+            <button onClick={onClose} className="text-zinc-600 hover:text-white transition-colors">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#FF6B2B] to-[#FF8B5B] flex items-center justify-center text-black font-bold text-2xl border border-white/10 shadow-lg shadow-[#FF6B2B]/20">
+              {userInitials}
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-white italic tracking-tight mb-1">{userName || member?.username || "Builder"}</h2>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-[#FF6B2B] uppercase tracking-widest bg-[#FF6B2B]/10 px-2 py-0.5 rounded border border-[#FF6B2B]/20">
+                  {tierLabel}
+                </span>
+                {member?.streakActive && (
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                    🔥 {member.streakDays} Day Streak
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="p-5 space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-zinc-900/60 rounded-xl border border-zinc-800/60 p-3 text-center">
-              <div className="text-2xl font-bold text-white">{totalPoints.toLocaleString()}</div>
-              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mt-0.5">Total Points</div>
+        {/* Content */}
+        <div className="p-8 space-y-8 flex-1 overflow-y-auto min-h-[300px] flex flex-col justify-center">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="w-8 h-8 border-2 border-[#FF6B2B]/20 border-t-[#FF6B2B] rounded-full animate-spin" />
+              <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Syncing Data...</div>
             </div>
-            <div className="bg-zinc-900/60 rounded-xl border border-zinc-800/60 p-3 text-center">
-              <div className="text-2xl font-bold text-emerald-400">{weeklyPoints.toLocaleString()}</div>
-              <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mt-0.5">This Week</div>
-            </div>
-          </div>
-
-          {tier !== "CHAMPION" && (
-            <div>
-              <div className="flex justify-between text-xs font-medium mb-1.5">
-                <span className="text-zinc-400">Progress to next rank</span>
-                <span className="text-zinc-300">{progressPct}%</span>
-              </div>
-              <div className="h-1.5 w-full bg-zinc-900 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-orange-600 to-orange-400 rounded-full transition-all duration-700"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="border-t border-zinc-800/60 pt-4">
-            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3">Link Social Accounts</h3>
-            <p className="text-xs text-zinc-500 mb-3">Earn 75 bonus points for each linked account</p>
-
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <svg className="h-4 w-4 text-orange-500" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-white">Reddit</span>
-                  {redditLinked && (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      u/{redditLinked.handle}
-                    </span>
-                  )}
-                </div>
-                {!redditLinked ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="u/your-username"
-                      value={redditHandle}
-                      onChange={(e) => setRedditHandle(e.target.value)}
-                      className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50"
-                    />
-                    <button
-                      onClick={() => linkSocial("REDDIT", redditHandle, setLinkingReddit, setRedditMsg)}
-                      disabled={linkingReddit}
-                      className="px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {linkingReddit ? "..." : "Link"}
-                    </button>
-                  </div>
-                ) : null}
-                {redditMsg && <p className={`text-xs mt-1 ${redditMsg.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>{redditMsg}</p>}
-              </div>
-
-              <div>
-                <div className="flex items-center gap-2 mb-1.5">
-                  <svg className="h-4 w-4 text-zinc-200" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                  </svg>
-                  <span className="text-sm font-semibold text-white">X / Twitter</span>
-                  {xLinked && (
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      @{xLinked.handle}
-                    </span>
-                  )}
-                </div>
-                {!xLinked ? (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      placeholder="@your-handle"
-                      value={xHandle}
-                      onChange={(e) => setXHandle(e.target.value)}
-                      className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50"
-                    />
-                    <button
-                      onClick={() => linkSocial("X", xHandle, setLinkingX, setXMsg)}
-                      disabled={linkingX}
-                      className="px-3 py-2 bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/30 text-orange-400 text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {linkingX ? "..." : "Link"}
-                    </button>
-                  </div>
-                ) : null}
-                {xMsg && <p className={`text-xs mt-1 ${xMsg.startsWith("✅") ? "text-emerald-400" : "text-red-400"}`}>{xMsg}</p>}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-800/60 pt-4">
-            <form action={handleSignOut}>
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900 text-zinc-400 hover:text-white text-sm font-semibold transition-all"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          ) : !member ? (
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center text-red-500 border border-red-500/20 mb-2">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
-                Sign Out
-              </button>
-            </form>
-          </div>
+              </div>
+              <div className="text-sm font-bold text-white italic">Member profile not initialized</div>
+              <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest leading-relaxed">
+                Interact with the Discord server to activate your profile points tracking.
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                  <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Total Points</div>
+                  <div className="text-2xl font-bold text-white tabular-nums italic">{totalPoints.toLocaleString()}</div>
+                </div>
+                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                  <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Weekly Gain</div>
+                  <div className="text-2xl font-bold text-[#FF6B2B] tabular-nums italic">+{weeklyPoints.toLocaleString()}</div>
+                </div>
+              </div>
+
+              {/* Onboarding */}
+              <div className="space-y-4">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Community Onboarding</div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center border transition-colors ${
+                        member?.onboardingIntro ? "bg-[#3DD68C]/10 border-[#3DD68C]/20 text-[#3DD68C]" : "bg-white/5 border-white/10 text-zinc-500"
+                      }`}>
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white uppercase tracking-tight">Server Intro</div>
+                        <div className="text-[10px] text-zinc-500 font-medium">Post in #introductions</div>
+                      </div>
+                    </div>
+                    {member?.onboardingIntro ? (
+                      <span className="text-[10px] font-bold text-[#3DD68C] uppercase tracking-widest bg-[#3DD68C]/10 px-2 py-0.5 rounded">Completed</span>
+                    ) : (
+                      <button
+                        onClick={claimIntro}
+                        disabled={claimingIntro}
+                        className="px-3 py-1 bg-[#FF6B2B] hover:bg-[#E55A1F] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all disabled:opacity-50"
+                      >
+                        {claimingIntro ? "..." : "Claim"}
+                      </button>
+                    )}
+                  </div>
+                  {introMsg && (
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${introMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>
+                      {introMsg}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Social Links */}
+              <div className="space-y-6">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Verification Status</div>
+                
+                {/* Reddit */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white uppercase tracking-tight">Reddit</span>
+                      {redditLinked && <span className="text-[10px] font-bold text-[#3DD68C] uppercase">Verified</span>}
+                    </div>
+                    {redditLinked && <span className="text-xs text-zinc-500 italic">u/{redditLinked.handle}</span>}
+                  </div>
+                  {!redditLinked && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="u/username"
+                        value={redditHandle}
+                        onChange={(e) => setRedditHandle(e.target.value)}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#FF6B2B]/50"
+                      />
+                      <button
+                        onClick={() => linkSocial("REDDIT", redditHandle, setLinkingReddit, setRedditMsg)}
+                        disabled={linkingReddit}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all disabled:opacity-50"
+                      >
+                        {linkingReddit ? "..." : "Link"}
+                      </button>
+                    </div>
+                  )}
+                  {redditMsg && <p className={`text-[10px] font-bold uppercase tracking-wider ${redditMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>{redditMsg}</p>}
+                </div>
+
+                {/* X */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white uppercase tracking-tight">X / Twitter</span>
+                      {xLinked && <span className="text-[10px] font-bold text-[#3DD68C] uppercase">Verified</span>}
+                    </div>
+                    {xLinked && <span className="text-xs text-zinc-500 italic">@{xLinked.handle}</span>}
+                  </div>
+                  {!xLinked && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder="@handle"
+                        value={xHandle}
+                        onChange={(e) => setXHandle(e.target.value)}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#FF6B2B]/50"
+                      />
+                      <button
+                        onClick={() => linkSocial("X", xHandle, setLinkingX, setXMsg)}
+                        disabled={linkingX}
+                        className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all disabled:opacity-50"
+                      >
+                        {linkingX ? "..." : "Link"}
+                      </button>
+                    </div>
+                  )}
+                  {xMsg && <p className={`text-[10px] font-bold uppercase tracking-wider ${xMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>{xMsg}</p>}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-8 border-t border-white/5 bg-white/[0.01]">
+          <form action={handleSignOut}>
+            <button
+              type="submit"
+              className="w-full py-4 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/50 text-zinc-500 hover:text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
+            >
+              Sign Out Session
+            </button>
+          </form>
         </div>
       </div>
     </div>
