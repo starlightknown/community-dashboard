@@ -24,7 +24,7 @@ export default function Header({ user }: HeaderProps) {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
             <svg
-              className="h-8 w-8 text-violet-500"
+              className="h-8 w-8 text-orange-500"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -39,7 +39,7 @@ export default function Header({ user }: HeaderProps) {
             <span className="text-xl font-bold tracking-tight text-white">
               Zencoder
             </span>
-            <span className="rounded-full bg-violet-500/10 px-2.5 py-0.5 text-xs font-medium text-violet-400 border border-violet-500/20">
+            <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-xs font-medium text-orange-400 border border-orange-500/20">
               Community
             </span>
           </div>
@@ -63,7 +63,7 @@ export default function Header({ user }: HeaderProps) {
               >
                 {link.name}
                 {activeTab === link.name && (
-                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-violet-600 to-indigo-500" />
+                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-gradient-to-r from-orange-500 to-orange-600" />
                 )}
               </a>
             ))}
@@ -90,7 +90,7 @@ export default function Header({ user }: HeaderProps) {
             <input
               type="text"
               placeholder="Search community..."
-              className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800/80 py-1.5 pl-9 pr-12 text-sm text-zinc-300 placeholder-zinc-500 focus:border-violet-500 focus:outline-none focus:ring-1 focus:ring-violet-500"
+              className="w-full rounded-lg bg-zinc-900/50 border border-zinc-800/80 py-1.5 pl-9 pr-12 text-sm text-zinc-300 placeholder-zinc-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
               <kbd className="hidden sm:inline-block rounded border border-zinc-800 bg-zinc-950 px-1.5 text-[10px] font-medium text-zinc-500">

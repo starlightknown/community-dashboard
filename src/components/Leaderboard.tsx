@@ -30,10 +30,10 @@ interface LeaderboardUser {
 
 function getTierColor(tier: string): string {
   const colors: { [key: string]: string } = {
-    CHAMPION: "text-amber-400 border-amber-400/20 bg-amber-400/5",
-    CONTRIBUTOR: "text-violet-400 border-violet-400/20 bg-violet-400/5",
-    BUILDER: "text-emerald-400 border-emerald-400/20 bg-emerald-400/5",
-    MEMBER: "text-cyan-400 border-cyan-400/20 bg-cyan-400/5",
+    CHAMPION: "text-orange-400 border-orange-400/20 bg-orange-400/5",
+    CONTRIBUTOR: "text-orange-300 border-orange-300/20 bg-orange-300/5",
+    BUILDER: "text-orange-200 border-orange-200/20 bg-orange-200/5",
+    MEMBER: "text-zinc-400 border-zinc-400/20 bg-zinc-400/5",
     LURKER: "text-slate-400 border-slate-400/20 bg-slate-400/5",
   };
   return colors[tier] || colors.LURKER;
@@ -202,11 +202,11 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: Member
   };
 
   return (
-    <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/20 backdrop-blur-md p-6">
+    <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/40 backdrop-blur-md p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
           <svg
-            className="h-5 w-5 text-amber-400"
+            className="h-5 w-5 text-orange-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -273,7 +273,7 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: Member
             
             <div className="h-1 w-full bg-zinc-900 rounded-full overflow-hidden">
               <div 
-                className="h-full bg-gradient-to-r from-violet-600/60 to-indigo-500/60"
+                className="h-full bg-gradient-to-r from-orange-600/60 to-orange-500/60"
                 style={{ width: `${user.progress}%` }}
               ></div>
             </div>
@@ -284,7 +284,7 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: Member
       <div className="mt-6 border-t border-zinc-800/60 pt-4 text-center">
         <a
           href="#"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-400 hover:text-violet-300 transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-orange-400 hover:text-orange-300 transition-colors"
         >
           View Full Standings
           <svg

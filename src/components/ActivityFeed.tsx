@@ -47,14 +47,14 @@ function formatTimeAgo(timestamp: string): string {
 
 function transformMessagesToActivities(messages: DiscordMessage[]): ActivityItem[] {
   const tagStyles = [
-    "text-violet-400 bg-violet-500/10 border-violet-500/20",
+    "text-orange-400 bg-orange-500/10 border-orange-500/20",
     "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
     "text-amber-400 bg-amber-500/10 border-amber-500/20",
     "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
   ];
 
   const avatarGradients = [
-    "from-violet-500 to-fuchsia-500",
+    "from-orange-500 to-orange-600",
     "from-emerald-500 to-teal-500",
     "from-amber-500 to-orange-500",
     "from-cyan-500 to-blue-500",

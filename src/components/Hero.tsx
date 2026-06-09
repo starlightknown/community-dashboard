@@ -21,7 +21,7 @@ export default function Hero({ guild }: { guild: Guild | null }) {
       value: guild?.approximate_presence_count ? `${guild.approximate_presence_count.toLocaleString()} online` : "Loading...",
       icon: (
         <svg
-          className="h-5 w-5 text-emerald-400"
+          className="h-5 w-5 text-orange-400"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -92,8 +92,8 @@ export default function Hero({ guild }: { guild: Guild | null }) {
 
   return (
     <section className="relative overflow-hidden py-12 sm:py-16 border-b border-zinc-900/50 bg-black">
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[350px] w-[600px] rounded-full bg-violet-600/10 blur-[120px] pointer-events-none" />
-      <div className="absolute top-0 right-1/4 h-[250px] w-[450px] rounded-full bg-indigo-500/5 blur-[100px] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 h-[350px] w-[600px] rounded-full bg-orange-600/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-0 right-1/4 h-[250px] w-[450px] rounded-full bg-orange-500/5 blur-[100px] pointer-events-none" />
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">

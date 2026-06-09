@@ -9,7 +9,7 @@ export default function ActionCards() {
       description: "Send your first message in #introductions to earn a starter XP boost.",
       icon: (
         <svg
-          className="h-6 w-6 text-violet-400 group-hover:scale-110 transition-transform duration-300"
+          className="h-6 w-6 text-orange-400 group-hover:scale-110 transition-transform duration-300"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -23,8 +23,8 @@ export default function ActionCards() {
         </svg>
       ),
       badge: "50 XP",
-      badgeColor: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-      glowColor: "group-hover:border-violet-500/40 group-hover:shadow-[0_0_20px_-3px_rgba(139,92,246,0.15)]",
+      badgeColor: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+      glowColor: "group-hover:border-orange-500/40 group-hover:shadow-[0_0_20px_-3px_rgba(249,115,22,0.15)]",
     },
     {
       title: "Code Showcase",
