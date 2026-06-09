@@ -73,6 +73,8 @@ export default function ProfileModal({
   const [xMsg, setXMsg] = useState("");
   const [introMsg, setIntroMsg] = useState("");
   const [claimingIntro, setClaimingIntro] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState("");
   const [loading, setLoading] = useState(!initialMember);
 
   useEffect(() => {
@@ -93,6 +95,7 @@ export default function ProfileModal({
       setRedditMsg("");
       setXMsg("");
       setIntroMsg("");
+      setSyncMsg("");
       setRedditHandle("");
       setXHandle("");
     }
@@ -131,6 +134,26 @@ export default function ProfileModal({
       setIntroMsg("❌ Failed to verify intro");
     } finally {
       setClaimingIntro(false);
+    }
+  }
+
+  async function syncActivity() {
+    setSyncing(true);
+    setSyncMsg("");
+    try {
+      const res = await fetch("/api/points/sync-reactions", { method: "POST" });
+      const data = await res.json();
+      if (res.ok) {
+        setSyncMsg(`✅ Synced! Found ${data.awardedCount} new items`);
+        const updated = await fetch(`/api/points/member?id=${userId}`).then((r) => r.json());
+        if (updated && !updated.error) setMember(updated);
+      } else {
+        setSyncMsg(`❌ ${data.error}`);
+      }
+    } catch {
+      setSyncMsg("❌ Sync failed");
+    } finally {
+      setSyncing(false);
     }
   }
 
@@ -220,15 +243,32 @@ export default function ProfileModal({
           ) : (
             <>
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
-                  <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Total Points</div>
-                  <div className="text-2xl font-bold text-white tabular-nums italic">{totalPoints.toLocaleString()}</div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                    <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Total Points</div>
+                    <div className="text-2xl font-bold text-white tabular-nums italic">{totalPoints.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-white/5 rounded-xl border border-white/5 p-4">
+                    <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Weekly Gain</div>
+                    <div className="text-2xl font-bold text-[#FF6B2B] tabular-nums italic">+{weeklyPoints.toLocaleString()}</div>
+                  </div>
                 </div>
-                <div className="bg-white/5 rounded-xl border border-white/5 p-4">
-                  <div className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">Weekly Gain</div>
-                  <div className="text-2xl font-bold text-[#FF6B2B] tabular-nums italic">+{weeklyPoints.toLocaleString()}</div>
-                </div>
+                <button
+                  onClick={syncActivity}
+                  disabled={syncing}
+                  className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-zinc-400 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <svg className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.001 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {syncing ? "Syncing Discord..." : "Sync Discord Activity"}
+                </button>
+                {syncMsg && (
+                  <p className={`text-[10px] font-bold text-center uppercase tracking-wider ${syncMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>
+                    {syncMsg}
+                  </p>
+                )}
               </div>
 
               {/* Onboarding */}
