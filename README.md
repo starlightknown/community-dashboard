@@ -1,7 +1,42 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+## Deployment (Vercel)
 
+This project is configured to use **Vercel Postgres** for production.
+
+1. **Push your code** to a GitHub repository.
+2. **Import your project** into Vercel.
+3. **Storage Setup**: In the Vercel Dashboard, go to the **Storage** tab and create a new **Postgres** database. Connect it to your project.
+4. **Environment Variables**: Vercel will automatically add `POSTGRES_PRISMA_URL` and `POSTGRES_URL_NON_POOLING`. You must manually add these from your `.env.local`:
+   - `DISCORD_CLIENT_ID`
+   - `DISCORD_CLIENT_SECRET`
+   - `DISCORD_BOT_TOKEN`
+   - `DISCORD_GUILD_ID`
+   - `NEXTAUTH_SECRET` (Generate a random string)
+   - `NEXTAUTH_URL` (Set to your production domain, e.g., `https://your-app.vercel.app`)
+5. **Build & Deploy**: Vercel will run `prisma generate` during the build. You may need to run `npx prisma db push` once locally or via a Vercel script to initialize the schema in your new Postgres instance.
+
+## Local Development
+
+The project is currently set to use **PostgreSQL** in `schema.prisma` for production compatibility.
+
+### Option 1: Using Local SQLite (Recommended for dev)
+If you don't have a local Postgres instance, you can temporarily switch back to SQLite:
+
+1. In `prisma/schema.prisma`, change the `db` block to:
+   ```prisma
+   datasource db {
+     provider = "sqlite"
+     url      = "file:./dev.db"
+   }
+   ```
+2. Update your `.env.local`:
+   ```env
+   DATABASE_URL="file:./dev.db"
+   ```
+3. Run `npx prisma generate`.
+
+### Option 2: Using the Development Server
 First, run the development server:
 
 ```bash
