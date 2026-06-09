@@ -175,6 +175,19 @@ export default async function DashboardPage() {
 
   const discordId = (session.user as any)?.id;
 
+  if (discordId) {
+    try {
+      await prisma.member.upsert({
+        where: { id: discordId },
+        update: {},
+        create: {
+          id: discordId,
+          username: session.user?.name || session.user?.email || "Unknown",
+        },
+      });
+    } catch {}
+  }
+
   const [leaderboard, announcementMessages, userMember] = await Promise.all([
     getLeaderboard("all-time", 10),
     fetchAnnouncementMessages(channels),
