@@ -6,25 +6,26 @@ import Hero from "../../components/Hero";
 import ActionCards from "../../components/ActionCards";
 import ActivityFeed from "../../components/ActivityFeed";
 import Leaderboard from "../../components/Leaderboard";
+import prisma from "@/lib/prisma";
+import { getLeaderboard } from "@/lib/points";
 
 const GUILD_ID = "1236805163784736850";
+
+const BOT_HEADERS = {
+  Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+};
 
 async function fetchGuildData() {
   try {
     const response = await fetch(
       `https://discord.com/api/v10/guilds/${GUILD_ID}?with_counts=true`,
-      {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
-        },
-      }
+      { headers: BOT_HEADERS, cache: "no-store" }
     );
     if (!response.ok) {
       console.error("Failed to fetch guild:", response.status);
       return null;
     }
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     console.error("Error fetching guild:", error);
     return null;
@@ -35,18 +36,11 @@ async function fetchMembersData() {
   try {
     const response = await fetch(
       `https://discord.com/api/v10/guilds/${GUILD_ID}/members?limit=100`,
-      {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
-        },
-      }
+      { headers: BOT_HEADERS, cache: "no-store" }
     );
-    if (!response.ok) {
-      return [];
-    }
+    if (!response.ok) return [];
     return await response.json();
-  } catch (error) {
-    console.error("Error fetching members:", error);
+  } catch {
     return [];
   }
 }
@@ -55,89 +49,85 @@ async function fetchChannelsData() {
   try {
     const response = await fetch(
       `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
-      {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
-        },
-      }
+      { headers: BOT_HEADERS, cache: "no-store" }
     );
-    if (!response.ok) {
-      return [];
-    }
+    if (!response.ok) return [];
     const channels = await response.json();
     return channels.filter((ch: any) => ch.type === 0);
-  } catch (error) {
-    console.error("Error fetching channels:", error);
+  } catch {
     return [];
   }
 }
 
-async function fetchRecentMessages(channelId: string) {
+async function fetchChannelMessages(channelId: string, channelName: string) {
   try {
     const response = await fetch(
       `https://discord.com/api/v10/channels/${channelId}/messages?limit=20`,
-      {
-        headers: {
-          Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
+      { headers: BOT_HEADERS, cache: "no-store" }
+    );
+    if (!response.ok) return [];
+    const messages = await response.json();
+    return messages.map((m: any) => ({ ...m, channelName }));
+  } catch {
+    return [];
+  }
+}
+
+async function fetchAnnouncementMessages(channels: any[]) {
+  const targetNames = ["announcements", "product-updates", "product_updates", "updates"];
+  const targetChannels = channels.filter((ch: any) =>
+    targetNames.some((name) => ch.name?.toLowerCase().includes(name))
+  );
+
+  if (targetChannels.length === 0) return [];
+
+  const allMessages: any[] = [];
+  for (const channel of targetChannels.slice(0, 3)) {
+    const msgs = await fetchChannelMessages(channel.id, channel.name);
+    allMessages.push(...msgs);
+  }
+
+  return allMessages
+    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 10);
+}
+
+async function syncMembers(members: any[]) {
+  for (const member of members) {
+    if (!member.user?.id || member.user?.bot) continue;
+    try {
+      await prisma.member.upsert({
+        where: { id: member.user.id },
+        update: {},
+        create: {
+          id: member.user.id,
+          username: member.user.username || member.user.global_name || "Unknown",
         },
-      }
-    );
-    if (!response.ok) {
-      return [];
+      });
+    } catch {
     }
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching messages:", error);
-    return [];
   }
 }
 
-async function initializePoints(members: any[]) {
+async function getUserMemberData(discordId: string) {
   try {
-    const response = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3002"}/api/points/init`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ members }),
-      }
-    );
-    return await response.json();
-  } catch (error) {
-    console.error("Error initializing points:", error);
+    const member = await prisma.member.findUnique({
+      where: { id: discordId },
+      include: {
+        socialLinks: {
+          select: { platform: true, handle: true, verifiedAt: true },
+        },
+      },
+    });
+    return member;
+  } catch {
     return null;
-  }
-}
-
-async function fetchLeaderboard() {
-  try {
-    const response = await fetch(
-      `${process.env.NEXTAUTH_URL || "http://localhost:3002"}/api/points/leaderboard`,
-      { cache: "no-store" }
-    );
-    if (!response.ok) {
-      return [];
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Error fetching leaderboard:", error);
-    return [];
   }
 }
 
 export default async function DashboardPage() {
   const session = await auth();
   const guild = await fetchGuildData();
-  const members = await fetchMembersData();
-  const channels = await fetchChannelsData();
-  
-  await initializePoints(members);
-  const leaderboard = await fetchLeaderboard();
-  
-  let recentMessages: any[] = [];
-  if (channels.length > 0) {
-    recentMessages = await fetchRecentMessages(channels[0].id);
-  }
 
   if (!session) {
     return (
@@ -156,7 +146,7 @@ export default async function DashboardPage() {
                 This dashboard tracks points and levels based on your activity in the Zencoder Discord server. Connect your account to see your real-time ranking.
               </p>
               <form action={handleDiscordSignIn}>
-                <button 
+                <button
                   type="submit"
                   className="w-full bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold py-4 rounded-2xl transition-all shadow-lg shadow-[#5865F2]/20 active:scale-[0.98] flex items-center justify-center gap-3"
                 >
@@ -176,16 +166,31 @@ export default async function DashboardPage() {
     );
   }
 
+  const [members, channels] = await Promise.all([
+    fetchMembersData(),
+    fetchChannelsData(),
+  ]);
+
+  await syncMembers(members);
+
+  const discordId = (session.user as any)?.id;
+
+  const [leaderboard, announcementMessages, userMember] = await Promise.all([
+    getLeaderboard("all-time", 10),
+    fetchAnnouncementMessages(channels),
+    discordId ? getUserMemberData(discordId) : Promise.resolve(null),
+  ]);
+
   return (
     <div className="min-h-screen flex flex-col bg-black text-zinc-100 font-sans selection:bg-violet-500/30 selection:text-white">
-      <Header user={session.user} />
+      <Header user={session.user} userMember={userMember as any} />
       <main className="flex-1 pb-16 relative">
-        <Hero guild={guild} />
+        <Hero guild={guild} userMember={userMember as any} />
         <ActionCards />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
-              <ActivityFeed messages={recentMessages} />
+              <ActivityFeed messages={announcementMessages} />
             </div>
             <div className="lg:col-span-1">
               <Leaderboard leaderboard={leaderboard} />
