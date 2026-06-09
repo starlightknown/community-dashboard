@@ -75,6 +75,10 @@ export default function ProfileModal({
   const [claimingIntro, setClaimingIntro] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState("");
+  const [mentionUrl, setMentionUrl] = useState("");
+  const [mentionPlatform, setMentionPlatform] = useState<"X" | "REDDIT">("X");
+  const [submittingMention, setSubmittingMention] = useState(false);
+  const [mentionMsg, setMentionMsg] = useState("");
   const [loading, setLoading] = useState(!initialMember);
 
   useEffect(() => {
@@ -96,6 +100,8 @@ export default function ProfileModal({
       setXMsg("");
       setIntroMsg("");
       setSyncMsg("");
+      setMentionUrl("");
+      setMentionMsg("");
       setRedditHandle("");
       setXHandle("");
     }
@@ -112,6 +118,33 @@ export default function ProfileModal({
 
   const redditLinked = member?.socialLinks?.find((l) => l.platform === "REDDIT") || (member?.redditHandle ? { handle: member.redditHandle } : null);
   const xLinked = member?.socialLinks?.find((l) => l.platform === "X") || (member?.xHandle ? { handle: member.xHandle } : null);
+
+  async function submitMention() {
+    if (!mentionUrl.trim()) {
+      setMentionMsg("Please enter a URL");
+      return;
+    }
+    setSubmittingMention(true);
+    setMentionMsg("");
+    try {
+      const res = await fetch("/api/mentions/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: userId, platform: mentionPlatform, postUrl: mentionUrl.trim() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMentionMsg("✅ Submitted! Waiting for verification.");
+        setMentionUrl("");
+      } else {
+        setMentionMsg(`❌ ${data.error}`);
+      }
+    } catch {
+      setMentionMsg("❌ Submission failed");
+    } finally {
+      setSubmittingMention(false);
+    }
+  }
 
   async function claimIntro() {
     setClaimingIntro(true);
@@ -371,6 +404,45 @@ export default function ProfileModal({
                     </div>
                   )}
                   {xMsg && <p className={`text-[10px] font-bold uppercase tracking-wider ${xMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>{xMsg}</p>}
+                </div>
+              </div>
+
+              {/* Public Mentions */}
+              <div className="space-y-4 pt-4 border-t border-white/5">
+                <div className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Public Mentions</div>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <select
+                      value={mentionPlatform}
+                      onChange={(e) => setMentionPlatform(e.target.value as "X" | "REDDIT")}
+                      className="bg-white/5 border border-white/10 rounded-lg px-2 py-2 text-xs text-white focus:outline-none focus:border-[#FF6B2B]/50"
+                    >
+                      <option value="X">X</option>
+                      <option value="REDDIT">Reddit</option>
+                    </select>
+                    <input
+                      type="text"
+                      placeholder="Paste post URL here"
+                      value={mentionUrl}
+                      onChange={(e) => setMentionUrl(e.target.value)}
+                      className="flex-1 bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-xs text-white placeholder-zinc-700 focus:outline-none focus:border-[#FF6B2B]/50"
+                    />
+                    <button
+                      onClick={submitMention}
+                      disabled={submittingMention}
+                      className="px-4 py-2 bg-[#FF6B2B] hover:bg-[#E55A1F] text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all disabled:opacity-50"
+                    >
+                      {submittingMention ? "..." : "Submit"}
+                    </button>
+                  </div>
+                  {mentionMsg && (
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${mentionMsg.includes("✅") ? "text-[#3DD68C]" : "text-red-500"}`}>
+                      {mentionMsg}
+                    </p>
+                  )}
+                  <p className="text-[9px] text-zinc-600 font-medium uppercase tracking-tight italic">
+                    Earn 30 pts per verified mention (Max 1/day per platform).
+                  </p>
                 </div>
               </div>
             </>
