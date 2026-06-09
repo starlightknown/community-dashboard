@@ -10,6 +10,10 @@ import prisma from "@/lib/prisma";
 import { getLeaderboard } from "@/lib/points";
 
 const GUILD_ID = "1236805163784736850";
+const ANNOUNCEMENT_CHANNELS = [
+  { id: "1250388146114265159", name: "announcements" },
+  { id: "1250388204159500319", name: "product-updates" },
+];
 
 const BOT_HEADERS = {
   Authorization: `Bot ${process.env.DISCORD_BOT_TOKEN || ""}`,
@@ -45,19 +49,6 @@ async function fetchMembersData() {
   }
 }
 
-async function fetchChannelsData() {
-  try {
-    const response = await fetch(
-      `https://discord.com/api/v10/guilds/${GUILD_ID}/channels`,
-      { headers: BOT_HEADERS, cache: "no-store" }
-    );
-    if (!response.ok) return [];
-    const channels = await response.json();
-    return channels.filter((ch: any) => ch.type === 0);
-  } catch {
-    return [];
-  }
-}
 
 async function fetchChannelMessages(channelId: string, channelName: string) {
   try {
@@ -73,20 +64,12 @@ async function fetchChannelMessages(channelId: string, channelName: string) {
   }
 }
 
-async function fetchAnnouncementMessages(channels: any[]) {
-  const targetNames = ["announcements", "product-updates", "product_updates", "updates"];
-  const targetChannels = channels.filter((ch: any) =>
-    targetNames.some((name) => ch.name?.toLowerCase().includes(name))
-  );
-
-  if (targetChannels.length === 0) return [];
-
+async function fetchAnnouncementMessages() {
   const allMessages: any[] = [];
-  for (const channel of targetChannels.slice(0, 3)) {
+  for (const channel of ANNOUNCEMENT_CHANNELS) {
     const msgs = await fetchChannelMessages(channel.id, channel.name);
     allMessages.push(...msgs);
   }
-
   return allMessages
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     .slice(0, 10);
@@ -166,10 +149,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const [members, channels] = await Promise.all([
-    fetchMembersData(),
-    fetchChannelsData(),
-  ]);
+  const members = await fetchMembersData();
 
   await syncMembers(members);
 
@@ -190,7 +170,7 @@ export default async function DashboardPage() {
 
   const [leaderboard, announcementMessages, userMember] = await Promise.all([
     getLeaderboard("all-time", 10),
-    fetchAnnouncementMessages(channels),
+    fetchAnnouncementMessages(),
     discordId ? getUserMemberData(discordId) : Promise.resolve(null),
   ]);
 
