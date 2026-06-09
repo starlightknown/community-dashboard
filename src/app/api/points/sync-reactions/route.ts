@@ -7,6 +7,13 @@ const GUILD_ID = "1236805163784736850";
 
 export async function POST(request: Request) {
   try {
+    // Basic security for the automated cron job
+    const authHeader = request.headers.get("Authorization");
+    const isCron = request.headers.get("x-vercel-cron") === "1";
+    
+    if (!isCron && authHeader !== `Bearer ${process.env.CRON_SECRET}` && process.env.NODE_ENV === "production") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     // 1. Get all text channels and threads
     const channelsRes = await fetch(`https://discord.com/api/v10/guilds/${GUILD_ID}/channels`, {
       headers: { Authorization: `Bot ${BOT_TOKEN}` },
