@@ -178,7 +178,6 @@ export async function getLeaderboard(
     select: {
       id: true,
       username: true,
-      image: true,
       totalPoints: true,
       weeklyPoints: true,
       tier: true,

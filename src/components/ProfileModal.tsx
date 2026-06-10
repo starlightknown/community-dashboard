@@ -12,7 +12,6 @@ interface SocialLink {
 interface UserMember {
   id: string;
   username: string;
-  image?: string | null;
   totalPoints: number;
   weeklyPoints: number;
   tier: string;
@@ -236,12 +235,8 @@ export default function ProfileModal({
           </div>
           
           <div className="flex items-center gap-6">
-            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#FF6B2B] to-[#FF8B5B] flex items-center justify-center text-black font-bold text-2xl border border-white/10 shadow-lg shadow-[#FF6B2B]/20 overflow-hidden">
-              {member?.image ? (
-                <img src={member.image} alt={member.username} className="w-full h-full object-cover" />
-              ) : (
-                userInitials
-              )}
+            <div className="h-16 w-16 rounded-xl bg-gradient-to-br from-[#FF6B2B] to-[#FF8B5B] flex items-center justify-center text-black font-bold text-2xl border border-white/10 shadow-lg shadow-[#FF6B2B]/20">
+              {userInitials}
             </div>
             <div>
               <h2 className="text-2xl font-bold text-white italic tracking-tight mb-1">{userName || member?.username || "Builder"}</h2>
