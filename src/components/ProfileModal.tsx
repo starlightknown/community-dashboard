@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { handleSignOut } from "@/app/actions";
+import { signOut } from "next-auth/react";
 
 interface SocialLink {
   platform: string;
@@ -451,14 +451,12 @@ export default function ProfileModal({
 
         {/* Footer */}
         <div className="p-8 border-t border-white/5 bg-white/[0.01]">
-          <form action={handleSignOut}>
-            <button
-              type="submit"
-              className="w-full py-4 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/50 text-zinc-500 hover:text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
-            >
-              Sign Out Session
-            </button>
-          </form>
+          <button
+            onClick={() => signOut({ callbackUrl: "/dashboard" })}
+            className="w-full py-4 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/10 hover:border-red-500/50 text-zinc-500 hover:text-red-500 text-[10px] font-bold uppercase tracking-[0.2em] transition-all active:scale-[0.98]"
+          >
+            Sign Out Session
+          </button>
         </div>
       </div>
     </div>
