@@ -5,6 +5,7 @@ import React from "react";
 interface Member {
   id: string;
   username: string;
+  image?: string | null;
   totalPoints: number;
   weeklyPoints: number;
   tier: string;
@@ -15,6 +16,7 @@ interface Member {
 interface LeaderboardUser {
   rank: number;
   name: string;
+  image?: string | null;
   points: string;
   gain: string;
   avatarGradient: string;
@@ -36,6 +38,7 @@ function transformDBToLeaderboard(members: Member[]): LeaderboardUser[] {
     return {
       rank: index + 1,
       name: member.username,
+      image: member.image,
       points: `${member.totalPoints.toLocaleString()} pts`,
       gain: `+${member.weeklyPoints}`,
       avatarGradient: avatarGradients[index % avatarGradients.length],
@@ -64,8 +67,12 @@ export default function Leaderboard({ leaderboard = [] }: { leaderboard?: Member
           users.map((user) => (
             <div key={user.rank} className="p-5 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
               <div className="w-4 text-[10px] font-bold text-zinc-600 tabular-nums">{user.rank}</div>
-              <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${user.avatarGradient} flex-shrink-0 flex items-center justify-center text-[12px] font-bold text-black border border-white/10`}>
-                {user.initials}
+              <div className={`w-8 h-8 rounded-lg ${user.image ? '' : `bg-gradient-to-br ${user.avatarGradient}`} flex-shrink-0 flex items-center justify-center text-[12px] font-bold text-black border border-white/10 overflow-hidden`}>
+                {user.image ? (
+                  <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  user.initials
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-bold text-white italic truncate tracking-tight">{user.name}</div>

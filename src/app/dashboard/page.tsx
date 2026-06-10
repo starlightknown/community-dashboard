@@ -81,12 +81,18 @@ async function syncMembers(members: any[]) {
   for (const member of members) {
     if (!member.user?.id || member.user?.bot) continue;
     try {
+      const avatarUrl = member.user.avatar 
+        ? `https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png`
+        : null;
       await prisma.member.upsert({
         where: { id: member.user.id },
-        update: {},
+        update: {
+          image: avatarUrl,
+        },
         create: {
           id: member.user.id,
           username: member.user.username || member.user.global_name || "Unknown",
+          image: avatarUrl,
         },
       });
     } catch {
@@ -162,10 +168,13 @@ export default async function DashboardPage() {
     try {
       await prisma.member.upsert({
         where: { id: discordId },
-        update: {},
+        update: {
+          image: session.user?.image,
+        },
         create: {
           id: discordId,
           username: session.user?.name || session.user?.email || "Unknown",
+          image: session.user?.image,
         },
       });
     } catch {}

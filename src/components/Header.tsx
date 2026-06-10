@@ -7,6 +7,7 @@ import ProfileModal from "./ProfileModal";
 interface UserMember {
   id: string;
   username: string;
+  image?: string | null;
   totalPoints: number;
   weeklyPoints: number;
   tier: string;
@@ -55,7 +56,11 @@ export default function Header({ user, userMember }: HeaderProps) {
               title="Open profile"
             >
               <div className="absolute inset-0 bg-[#FF6B2B] opacity-0 group-hover:opacity-10 transition-opacity" />
-              {initials}
+              {user.image ? (
+                <img src={user.image} alt={user.name || ""} className="w-full h-full object-cover" />
+              ) : (
+                initials
+              )}
             </button>
           </div>
         )}
